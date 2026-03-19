@@ -1,7 +1,7 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <WiFiClientSecure.h> // Adicionamos a biblioteca de segurança
+#include <WiFiClientSecure.h> 
 
 // REDE COM ACESSO À INTERNET
 const char* ssid = "Vinicius"; 
@@ -55,10 +55,12 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   
-  config.xclk_freq_hz = 20000000; 
+  config.xclk_freq_hz = 10000000; 
   config.pixel_format = PIXFORMAT_JPEG;
-  config.frame_size = FRAMESIZE_VGA;
-  config.jpeg_quality = 15; 
+  
+  // Imagem em tamanho QVGA (320x240) e qualidade com maior compressão (20)
+  config.frame_size = FRAMESIZE_HVGA; 
+  config.jpeg_quality = 14; 
   config.fb_count = 1;
 
   if (esp_camera_init(&config) != ESP_OK) {
@@ -76,7 +78,7 @@ void setup() {
   // Ignora a verificação do certificado para não perder tempo
   client.setInsecure(); 
   
-  // Mantém a porta aberta
+  // Mantém a porta aberta na nuvem
   http.setReuse(true); 
 }
 
@@ -102,8 +104,12 @@ void loop() {
       Serial.println(httpResponseCode);
     }
     
+    // Fecha a porta corretamente após a entrega para o ESP32 respirar
+    http.end(); 
+    
     esp_camera_fb_return(fb);
   }
   
-  delay(10); 
+  // Como a foto agora é leve, podemos enviar bem mais rápido sem estourar o buffer
+  delay(50); 
 }
